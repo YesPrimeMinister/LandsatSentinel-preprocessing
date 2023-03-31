@@ -8,8 +8,11 @@
 # Returns: Raster for each stack you select
 
 # import libraries
-from osgeo import gdal
 import geopandas as gpd
+import rasterio
+import rasterio.mask
+import numpy as np
+import matplotlib.pyplot as plt
 
 from os import mkdir, listdir
 from os.path import join, isdir, basename
@@ -70,28 +73,60 @@ class DownloadedToTimeSeries:
                 filepath = glob(join(temp_dir, f'*{band}.TIF'))
                 date = basename(filepath[0])[17:25]
                 self.bands_paths[band][date] = filepath[0]
-        print(self.bands_paths)
+
 
     def combine_rasters(self):
         print('Combining into raster time series...')
 
-        def _crop_by_bbox(raster_path, vector_path):
+        def _crop_by_bbox(raster_path):
             # Crop to unbuffered bounding box (data/BB_povodi_WGS_UTM33.shp)
-            cropped_raster = []
-            return cropped_raster
+            with rasterio.open(raster_path) as src:
+                out_image, out_transform = rasterio.mask.mask(src,
+                    self.boundingbox_gdf.geometry, crop=True)
+                out_meta = src.meta
+                out_meta.update({"driver": "GTiff",
+                    "height": out_image.shape[1],
+                    "width": out_image.shape[2],
+                    "transform": out_transform})
+
+            #with rasterio.open("RGB.byte.masked.tif", "w", **out_meta) as dest:
+            #    dest.write(out_image)
+            return out_image, out_meta
 
         for band in self.bands_paths:
-            for date in self.bands_paths[date]:
-                cropped_raster = _crop_by_bbox(self.bands_paths)
+            self.sorted_dates = sorted(self.bands_paths[band].keys())
+            cropped_rasters = {}
+            for date in self.sorted_dates:
+                raster_path = self.bands_paths[band][date]
+                cropped_rasters[date] = _crop_by_bbox(raster_path)
+
+            # Create empty arr
+            cropped_shape = cropped_rasters[self.sorted_dates[0]][0].shape
+
+            arr_stack = np.empty((len(self.sorted_dates), cropped_shape[1],
+                                  cropped_shape[2]), dtype=np.uint16)
+            for idx, cropped_raster_date in enumerate(cropped_rasters):
+                arr_stack[idx, :, :] = cropped_rasters[cropped_raster_date][0][0,:,:]
+
+            # save resulting raster
+            out_filename = f'time_series_{self.sorted_dates[0]}_{self.sorted_dates[-1]}_{band}.tif'
+            out_path = join(self.imagery_path, out_filename)
+            out_metadata = cropped_rasters[self.sorted_dates[0]][1]
+            out_metadata.update({"count": len(self.sorted_dates)})
+            with rasterio.open(out_path, "w", **out_metadata) as dest:
+                dest.write(arr_stack)
+
+
+    def save_dates(self):
+        with open(join(self.imagery_path, 'acquisition_dates.txt'), 'a') as txt:
+            for date in self.sorted_dates:
+                txt.write(f'{date}\n')
 
 
     def cleanup(self):
         print(f'Cleaning up, deleting temporary folder {self.temp_folder}...')
-        #rmtree(join(path_imagery, 'temp'))
+        rmtree(self.temp_folder)
 
-# read vector files
-#gdf_buffered = gpd.read_file(path_buffered)
-#print(gdf_buffered)
 
 if __name__ == "__main__":
     # set paths
@@ -102,6 +137,7 @@ if __name__ == "__main__":
     preprocess.extract_archives()
     preprocess.select_bands()
     preprocess.find_filepaths()
-
+    preprocess.combine_rasters()
+    preprocess.save_dates()
     preprocess.cleanup()
     print('Succesfully preprocessed!')
