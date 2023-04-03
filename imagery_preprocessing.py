@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from os import mkdir, listdir
-from os.path import join, isdir, basename
+from os.path import join, isdir, basename, isfile
 from glob import glob
 from shutil import rmtree, unpack_archive
 
@@ -45,8 +45,8 @@ class DownloadedToTimeSeries:
                                     basename(archive).split('.')[0])
             self.temp_dirs.append(temp_archive_dir)
             # Temporarily commented out to not extract imagery during each test run
-            #mkdir(temp_archive_dir)
-            #unpack_archive(archive, extract_dir=temp_archive_dir)
+            mkdir(temp_archive_dir)
+            unpack_archive(archive, extract_dir=temp_archive_dir)
 
 
     def select_bands(self):
@@ -88,9 +88,6 @@ class DownloadedToTimeSeries:
                     "height": out_image.shape[1],
                     "width": out_image.shape[2],
                     "transform": out_transform})
-
-            #with rasterio.open("RGB.byte.masked.tif", "w", **out_meta) as dest:
-            #    dest.write(out_image)
             return out_image, out_meta
 
         for band in self.bands_paths:
@@ -118,7 +115,10 @@ class DownloadedToTimeSeries:
 
 
     def save_dates(self):
-        with open(join(self.imagery_path, 'acquisition_dates.txt'), 'a') as txt:
+        out_path = join(self.imagery_path, 'acquisition_dates.txt')
+        if isfile(out_path):
+            rmtree(out_path)
+        with open(out_path, 'a') as txt:
             for date in self.sorted_dates:
                 txt.write(f'{date}\n')
 
@@ -131,7 +131,7 @@ class DownloadedToTimeSeries:
 if __name__ == "__main__":
     # set paths
     path_imagery = 'e:/data_krkonose/2022' # set to args
-    path_boundingbox = 'data/BB_povodi_WGS_UTM33.shp'
+    path_boundingbox = 'data/BB_povodi_WGS_UTM33_buffer500m.shp'
 
     preprocess = DownloadedToTimeSeries(path_imagery, path_boundingbox)
     preprocess.extract_archives()
