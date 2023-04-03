@@ -86,6 +86,7 @@ bap_score <- function(doy, year, cloud_dist, target_doy, target_year,
   # net score
   print("4/5 Calculating NET score.")
   score <- score_doy*w_doy + score_year*w_year + score_cloud*w_cloud_dist
+  
   if (!is.null(valid_pixels)){
     score <- score * valid_pixels
   }

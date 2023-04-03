@@ -14,78 +14,75 @@ for (p in l_packages){
   library(p, character.only = T)
 }
 
+# path to the bap_compositing-function including .R suffix
+getwd()
+source('E:/LandsatSentinel-preprocessing/functions.R')
+
 # =============================================================================
 # Part I - Best-Available-Pixel compositing
 # =============================================================================
 
-
-dir_main <- 'e:/data_krkonose/session_03-05'
-getwd()
+year <- 2022
+dir_main <- paste('e:/data_krkonose/', as.character(year), sep='')
 setwd(dir_main)
+getwd()
 
 # =============================================================================
 # 1) Prepare input
 
 # create list of desired image band files
-l_bands <- c("BLU", "GRN", "RED", "NIR", "SW1", "SW2", "NDV", "EVI", "TCG", 
-             "TCB", "TCW")
-l_files <- sapply(l_bands, function(x){
-  paste0("imagery/time-series/2014-2016_001-365_HL_TSA_LNDLG_", x, "_TSS.tif")
-})
+l_files <- list.files(pattern='time_series_.*.tif')
 print(l_files)
 
 # read raster stacks
 l_stacks <- lapply(l_files, raster::stack)
 
 # retrieve necessary variables for compositing (DOYs and year vectors)
-bandnames <- names(l_stacks$BLU)
-datestring <- lapply(bandnames, function(x) as.Date(substr(x, 2, 9), "%Y%m%d"))
+dates <- unlist(as.list(read.delim('acquisition_dates.txt', header=FALSE, colClasses="character")$V1))
+datestring <- lapply(dates, function(x) as.Date(x, "%Y%m%d"))
 doys <- as.numeric(lapply(datestring, yday))
 years <- as.numeric(lapply(datestring, year))
 
 # read cloud distance and valid pixels (masks) stacks
-cdists <- raster::stack('imagery/bap/2014-2016_001-365_HL_TSA_LNDLG_CDS_TSS.tif')
-vld <- raster::stack('imagery/bap/2014-2016_001-365_HL_TSA_LNDLG_VLD_TSS.tif')
+
+cdists <- raster::stack(list.files(pattern='*CDIST.tif')[[1]])
+cdists <- cdists * 10 # needs to be converted to meters, cloud distance rasters from earth explorer are in 0.1m
+#vld <- raster::stack('imagery/bap/2014-2016_001-365_HL_TSA_LNDLG_VLD_TSS.tif')
 
 
 # =============================================================================
 # 2) Parameterization
 
-# path to the bap_compositing-function including .R suffix
-getwd()
-source('functions.R')
-
 # Composite 1
 # parameters
-target_year <- 2015
-target_doy <- 90
+target_year <- 2022
+target_doy <- 200
 
 w_year <- 0.0
-w_doy <- 0.6
-w_cdist <- 0.4
+w_doy <- 0.5
+w_cdist <- 0.5
 
-max_doff <- 30
-max_yoff <- 4
+max_doff <- 100
+max_yoff <- 0
 
-min_cdist <- 100
-max_cdist <- 500
+min_cdist <- 0
+max_cdist <- 200
 
 # call bap_score-function for 1st composite
 bapscore1 <- bap_score(doy=doys, year=years, cloud_dist=cdists, 
                        target_doy=target_doy, target_year=target_year, 
                        w_doy=w_doy, w_year=w_year, w_cloud_dist=w_cdist, 
                        max_doy_offset=max_doff, max_year_offset=max_yoff, 
-                       min_cloud_dist=min_cdist, max_cloud_dist=max_cdist,
-                       valid_pixels=vld)
+                       min_cloud_dist=min_cdist, max_cloud_dist=max_cdist)
 
 # create composites for each band from index object
 l_composites <- lapply(l_stacks, create_bap, idx_raster=bapscore1$idx)
 
 # create stack of composite rasters + DOY and YEAR info and write to disc
-comp <- raster::brick(c(l_composites, bapscore1$doy, bapscore1$year))
+comp <- raster::brick(c(l_composites, bapscore1$doy, bapscore1$score))
 print(comp)
 
-outname <- paste0('imagery/bap/LNDLG_BAP_Y', toString(target_year), '-', 
+outname <- paste0('test_', toString(target_year), '-', 
                   toString(max_yoff), '_DOY', toString(target_doy), '-', 
                   toString(max_doff), '.tif')
 writeRaster(comp, outname, format='GTiff', datatype = 'INT2U', overwrite=T,
