@@ -79,10 +79,11 @@ bapscore1 <- bap_score(doy=doys, year=years, cloud_dist=cdists,
 l_composites <- lapply(l_stacks, create_bap, idx_raster=bapscore1$idx)
 
 # create stack of composite rasters + DOY and YEAR info and write to disc
-comp <- raster::brick(c(l_composites, bapscore1$doy, bapscore1$score))
+comp <- raster::brick(c(l_composites, bapscore1$doy, bapscore1$score*10000))
 print(comp)
 
-outname <- paste0('test_', toString(target_year), '-', 
+dir.create('results')
+outname <- paste0('results/composite_', toString(target_year), '-', 
                   toString(max_yoff), '_DOY', toString(target_doy), '-', 
                   toString(max_doff), '.tif')
 writeRaster(comp, outname, format='GTiff', datatype = 'INT2U', overwrite=T,
