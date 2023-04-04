@@ -22,7 +22,7 @@ source('E:/LandsatSentinel-preprocessing/functions.R')
 # Part I - Best-Available-Pixel compositing
 # =============================================================================
 
-year <- 2022
+year <- 2014
 dir_main <- paste('e:/data_krkonose/', as.character(year), sep='')
 setwd(dir_main)
 getwd()
@@ -31,7 +31,7 @@ getwd()
 # 1) Prepare input
 
 # create list of desired image band files
-l_files <- list.files(pattern='time_series_.*.tif')
+l_files <- list.files(pattern='time_series_.*.tif$')
 print(l_files)
 
 # read raster stacks
@@ -47,6 +47,9 @@ years <- as.numeric(lapply(datestring, year))
 
 cdists <- raster::stack(list.files(pattern='*CDIST.tif')[[1]])
 cdists <- cdists * 10 # needs to be converted to meters, cloud distance rasters from earth explorer are in 0.1m
+plot(cdists)
+
+l_stacks[[7]] <- cdists
 #vld <- raster::stack('imagery/bap/2014-2016_001-365_HL_TSA_LNDLG_VLD_TSS.tif')
 
 
@@ -55,8 +58,8 @@ cdists <- cdists * 10 # needs to be converted to meters, cloud distance rasters 
 
 # Composite 1
 # parameters
-target_year <- 2022
-target_doy <- 200
+target_year <- year
+target_doy <- 175
 
 w_year <- 0.0
 w_doy <- 0.5
