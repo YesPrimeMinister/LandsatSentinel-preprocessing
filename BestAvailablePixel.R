@@ -16,12 +16,15 @@ for (p in l_packages){
 
 # path to the bap_compositing-function including .R suffix
 getwd()
-source('E:/LandsatSentinel-preprocessing/functions.R')
+# change to the path to your script
+source('E:/path/to/this/script/functions.R')
+# for example: source('E:/LandsatSentinel-preprocessing/functions.R')
 
 # =============================================================================
 # Part I - Best-Available-Pixel compositing
 # =============================================================================
 
+# Change year and path to your data
 year <- 2014
 dir_main <- paste('e:/data_krkonose/', as.character(year), sep='')
 setwd(dir_main)
@@ -92,65 +95,3 @@ outname <- paste0('results/composite_', toString(target_year), '-',
 writeRaster(comp, outname, format='GTiff', datatype = 'INT2U', overwrite=T,
             progress='text')
 
-# Composite 2
-# ...
-
-
-# =============================================================================
-# Part II - Spectral-Temporal-Metrics
-# =============================================================================
-# ..
-
-
-evi <- stack('imagery/time-series/2014-2016_001-365_HL_TSA_LNDLG_EVI_TSS.tif')
-tcb <- stack('imagery/time-series/2014-2016_001-365_HL_TSA_LNDLG_TCB_TSS.tif')
-tcg <- stack('imagery/time-series/2014-2016_001-365_HL_TSA_LNDLG_TCG_TSS.tif')
-
-# retrieve temporal information from bandnames
-library(lubridate)
-datestring <- unlist(lapply(names(tcb), function(x) substr(x, 2, 9)))
-dates <- as.POSIXlt(datestring, format = "%Y%m%d")
-
-# on this date-object, we can perform logical operations
-# for example, let's find the indices for the months June-August only
-condition <- (year(dates) %in% 2014:2016) & (month(dates) %in% 8:11)
-
-# convert raster subset to matrix
-evi_matrix <- as.matrix(evi[[which(condition)]])
-tcg_matrix <- as.matrix(tcg[[which(condition)]])
-tcb_matrix <- as.matrix(tcb[[which(condition)]])
-
-# calculate P10 across rows in matrix
-# evi_p10 <- apply(evi_matrix, 1, FUN=quantile, probs = c(.10), na.rm=T)
-# evi_p10 <- apply(evi_matrix, 1, FUN=sd, na.rm=T)
-evi_p10 <- apply(evi_matrix, 1, FUN=quantile, probs = c(.85), na.rm=T)
-tcg_p10 <- apply(tcg_matrix, 1, FUN=quantile, probs = c(.85), na.rm=T)
-tcb_p10 <- apply(tcb_matrix, 1, FUN=sd, na.rm=T)
-
-# write results to empty raster
-evi_p10_raster <- raster(nrows=evi@nrows, 
-                         ncols=evi@ncols, 
-                         crs=evi@crs, 
-                         vals=evi_p10,
-                         ext=extent(evi))
-
-tcg_p10_raster <- raster(nrows=evi@nrows, 
-                         ncols=evi@ncols, 
-                         crs=evi@crs, 
-                         vals=tcg_p10,
-                         ext=extent(evi))
-
-tcb_p10_raster <- raster(nrows=evi@nrows, 
-                         ncols=evi@ncols, 
-                         crs=evi@crs, 
-                         vals=tcb_p10,
-                         ext=extent(evi))
-
-
-
-outname_stm <- 'tcb_811_sd.tif'
-writeRaster(tcb_p10_raster, outname_stm, format='GTiff', datatype = 'INT2S', overwrite=T,
-            progress='text')
-
-# plot result
-plot(evi_p10_raster)
