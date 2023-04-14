@@ -14,6 +14,7 @@ import rasterio.mask
 import numpy as np
 import matplotlib.pyplot as plt
 
+import sys
 from os import mkdir, listdir
 from os.path import join, isdir, basename, isfile
 from glob import glob
@@ -55,13 +56,15 @@ class DownloadedToTimeSeries:
         if self.satellite == 'Sentinel2':
             print(f'Unable to select suitable bands for {self.satellite}')
         elif self.satellite == 'Landsat5':
-            print(f'Unable to select suitable bands for {self.satellite}')
+            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'CDIST')
         elif self.satellite == 'Landsat7':
-            print(f'Unable to select suitable bands for {self.satellite}')
+            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'CDIST')
         elif self.satellite == 'Landsat8':
             self.bands = ('B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'CDIST')
         else:
-            print(f'Unrecognised satellite: {self.satellite}')
+            print(f'Unrecognised satellite: {self.satellite}.')
+            print(f'Supported satellites are: {["Sentinel2", "Landsat5",
+                "Landsat7", "Landsat8"]}')
 
 
     def find_filepaths(self):
@@ -130,10 +133,20 @@ class DownloadedToTimeSeries:
 
 if __name__ == "__main__":
     # set paths
-    path_imagery = 'e:/data_krkonose/2022' # set to args
     path_boundingbox = 'data/BB_povodi_WGS_UTM33_buffer500m.shp'
 
-    preprocess = DownloadedToTimeSeries(path_imagery, path_boundingbox)
+    if len(sys.argv) > 1:
+        path_imagery = sys.argv[1]      #'e:/data_krkonose/2022'
+        if len(sys.argv) > 2:
+            satellite = sys.argv[2]
+        else:
+            satellite = 'Landsat8'
+    else:
+        path_imagery = 'e:/data_krkonose/2022'
+        satellite = 'Landsat8'
+
+
+    preprocess = DownloadedToTimeSeries(path_imagery, path_boundingbox, satellite)
     preprocess.extract_archives()
     preprocess.select_bands()
     preprocess.find_filepaths()
