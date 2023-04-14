@@ -132,7 +132,10 @@ class Composite:
 
 if __name__ == '__main__':
     # this parameter need to be adjusted
-    in_path = sys.argv[1]   #'E:/data_krkonose/2022/results/composite_2022-0_DOY200-100.tif'
+    if len(sys.argv) > 1:
+        in_path = sys.argv[1]
+    else:
+        in_path = 'E:/data_krkonose/2022/results/composite_2022-0_DOY200-100.tif'
 
     # relevant paths
     root_path = dirname(in_path)
