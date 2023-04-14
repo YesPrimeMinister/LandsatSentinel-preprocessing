@@ -134,8 +134,13 @@ if __name__ == '__main__':
     # this parameter need to be adjusted
     if len(sys.argv) > 1:
         in_path = sys.argv[1]
+        if len(sys.argv) > 2:
+            satellite = sys.argv[2]
+        else:
+            satellite = 'Landsat8'
     else:
         in_path = 'E:/data_krkonose/2022/results/composite_2022-0_DOY200-100.tif'
+        satellite = 'Landsat8'
 
     # relevant paths
     root_path = dirname(in_path)
@@ -143,7 +148,7 @@ if __name__ == '__main__':
     out_path = join(root_path, 'out_composite_with_indices.tif')
 
     # computation itself
-    composite = Composite(in_path)
+    composite = Composite(in_path, satellite)
     composite.export_metadata_raster(metadata_path)
     composite.add_new_bands()
     composite.export_composite(out_path)
