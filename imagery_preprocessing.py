@@ -1,13 +1,12 @@
-## This script preprocesses Landsat Collection 2 imagery from USGS EarthExplorer
-# Specifically:
-# Open the archived files into a temporary folder
-# Select only important bands (B2-7, CloudDist)
-# Crop to unbuffered bounding box (data/BB_povodi_WGS_UTM33.shp)
-# Combine all features into rasters with each date as a separate band
-# Cleanup - delete temporary folder
-# Returns: Raster for each stack you select
+# -*- coding: utf-8 -*-
+"""
+This script preprocesses Landsat Collection 2 imagery from USGS EarthExplorer.
 
-# import libraries
+Arguments:
+    path to the folder with downloaded imagery
+    satellite name - default 'Landsat8'
+"""
+
 import geopandas as gpd
 import rasterio
 import rasterio.mask
@@ -23,6 +22,7 @@ from shutil import rmtree, unpack_archive
 
 class DownloadedToTimeSeries:
     def __init__(self, imagery_path, boundingbox_path, satellite='Landsat8'):
+        """Inits class, loads AOI to memory."""
         self.imagery_path = imagery_path
         self.boundingbox_path = boundingbox_path
         self.boundingbox_gdf = gpd.read_file(boundingbox_path)
@@ -51,7 +51,7 @@ class DownloadedToTimeSeries:
 
 
     def select_bands(self):
-        # Select only important bands (B2-7, CloudDist)
+        """Selects only relevant bands (Visible, NIR, SWIR, CloudDist)"""
         print('Selecting bands to keep...')
         if self.satellite == 'Sentinel2':
             print(f'Unable to select suitable bands for {self.satellite}')
@@ -63,8 +63,6 @@ class DownloadedToTimeSeries:
             self.bands = ('B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'CDIST')
         else:
             print(f'Unrecognised satellite: {self.satellite}.')
-            print(f'Supported satellites are: {["Sentinel2", "Landsat5",
-                "Landsat7", "Landsat8"]}')
 
 
     def find_filepaths(self):
@@ -79,10 +77,11 @@ class DownloadedToTimeSeries:
 
 
     def combine_rasters(self):
+        """Combine all spectral bands into rasters with each date as a separate band"""
         print('Combining into raster time series...')
 
         def _crop_by_bbox(raster_path):
-            # Crop to unbuffered bounding box (data/BB_povodi_WGS_UTM33.shp)
+            """Crop to unbuffered bounding box (data/BB_povodi_WGS_UTM33.shp)"""
             with rasterio.open(raster_path) as src:
                 out_image, out_transform = rasterio.mask.mask(src,
                     self.boundingbox_gdf.geometry, crop=True)
@@ -118,6 +117,7 @@ class DownloadedToTimeSeries:
 
 
     def save_dates(self):
+        """Exports the resulting arrays."""
         out_path = join(self.imagery_path, 'acquisition_dates.txt')
         if isfile(out_path):
             rmtree(out_path)
@@ -127,6 +127,7 @@ class DownloadedToTimeSeries:
 
 
     def cleanup(self):
+        """Deletes temporary folder"""
         print(f'Cleaning up, deleting temporary folder {self.temp_folder}...')
         rmtree(self.temp_folder)
 
