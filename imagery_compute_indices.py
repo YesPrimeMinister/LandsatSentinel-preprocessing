@@ -88,13 +88,14 @@ class Composite:
                 (self.orig_arr[4, :, :] * -0.7117) +
                 (self.orig_arr[5, :, :] * -0.4559))
 
-        return np.stack([tcb, tcg, tcw], axis=0) * 1_000
+        return np.stack([tcb, tcg, tcw], axis=0)
 
     def _compute_normalised_difference(self, idx1, idx2):
         """Compute normalised difference based on band indices (b1-b2)/(b1+b2).
         Multiply the result by 10 000."""
-        return (((self.orig_arr[idx1, :, :] - self.orig_arr[idx2, :, :]) /
-            (self.orig_arr[idx1, :, :] + self.orig_arr[idx2, :, :])) * 10_000)
+        a = self.orig_arr[idx1, :, :]
+        b = self.orig_arr[idx2, :, :]
+        return ((a - b) / (a + b)) * 10_000
 
     def add_new_bands(self):
         """Create an array with new bands (original+TC+NDVI+NDII+NBR2+SRTM)"""
@@ -154,3 +155,4 @@ if __name__ == '__main__':
     composite.export_metadata_raster(metadata_path)
     composite.add_new_bands()
     composite.export_composite(out_path)
+    print(f'Successfully exported composite to {out_path}')

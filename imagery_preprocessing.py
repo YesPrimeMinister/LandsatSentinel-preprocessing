@@ -56,11 +56,11 @@ class DownloadedToTimeSeries:
         if self.satellite == 'Sentinel2':
             print(f'Unable to select suitable bands for {self.satellite}')
         elif self.satellite == 'Landsat5':
-            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'CDIST')
+            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B7', 'CDIST', 'QA_PIXEL')
         elif self.satellite == 'Landsat7':
-            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'CDIST')
+            self.bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B7', 'CDIST', 'QA_PIXEL')
         elif self.satellite == 'Landsat8':
-            self.bands = ('B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'CDIST')
+            self.bands = ('B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'CDIST', 'QA_PIXEL')
         else:
             print(f'Unrecognised satellite: {self.satellite}.')
 
@@ -117,7 +117,7 @@ class DownloadedToTimeSeries:
 
 
     def save_dates(self):
-        """Exports the resulting arrays."""
+        """Exports a text file with sorted acquisition dates."""
         out_path = join(self.imagery_path, 'acquisition_dates.txt')
         if isfile(out_path):
             rmtree(out_path)
