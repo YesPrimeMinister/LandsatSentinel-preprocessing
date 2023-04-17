@@ -34,7 +34,7 @@ getwd()
 # 1) Prepare input
 
 # create list of desired image band files
-l_files <- list.files(pattern='time_series_.*.tif$')
+l_files <- list.files(pattern='time_series_.*[1-9].tif$')
 print(l_files)
 
 # read raster stacks
