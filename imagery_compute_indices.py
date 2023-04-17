@@ -2,7 +2,9 @@
 """
 Adds new features to a Best Available Pixel composite.
 
-Argument: path to the R script composite
+Arguments:
+    path to the R script composite
+    satellite name - default 'Landsat8'
 """
 
 
