@@ -25,7 +25,7 @@ source('E:/path/to/this/script/functions.R')
 # =============================================================================
 
 # Change year and path to your data
-year <- 2014
+year <- 2000
 dir_main <- paste('e:/data_krkonose/', as.character(year), sep='')
 setwd(dir_main)
 getwd()
@@ -53,8 +53,12 @@ cdists <- cdists * 10 # needs to be converted to meters, cloud distance rasters 
 plot(cdists)
 
 l_stacks[[7]] <- cdists
-#vld <- raster::stack('imagery/bap/2014-2016_001-365_HL_TSA_LNDLG_VLD_TSS.tif')
 
+vld <- raster::stack(list.files(pattern='*QA_PIXEL.tif')[[1]])
+
+m <- c(0, 5439, 0,  5440, 5440, 1,  5441, 65535, 0)
+rcl_matrix <- matrix(m, ncol=3, byrow=TRUE)
+vld_bool <- reclassify(vld, rcl_matrix)
 
 # =============================================================================
 # 2) Parameterization
@@ -79,7 +83,8 @@ bapscore1 <- bap_score(doy=doys, year=years, cloud_dist=cdists,
                        target_doy=target_doy, target_year=target_year, 
                        w_doy=w_doy, w_year=w_year, w_cloud_dist=w_cdist, 
                        max_doy_offset=max_doff, max_year_offset=max_yoff, 
-                       min_cloud_dist=min_cdist, max_cloud_dist=max_cdist)
+                       min_cloud_dist=min_cdist, max_cloud_dist=max_cdist,
+                       valid_pixels=vld_bool)
 
 # create composites for each band from index object
 l_composites <- lapply(l_stacks, create_bap, idx_raster=bapscore1$idx)
