@@ -4,7 +4,7 @@
 
 Used for classifications in a small region of Krkonose Mts., Czechia.
 
-Created at the dept. of Applied Geoinformatics and Cartography, Faculty of Science, Charles University.
+Created by Jakub Dvořák and Markéta Potůčková at the dept. of Applied Geoinformatics and Cartography, Faculty of Science, Charles University. Originally based on an exercise in the Earth Observation course at Humboldt University, Berlin.
 
 ## Installation
 
@@ -37,7 +37,7 @@ There are 4 steps to running this procedure successfuly:
 	```
 	If running from an editor, set values for variables `path_imagery` and `satellite`.
 	
-	The only relevant value for `satellite` is "Landsat8" for now.
+	The only relevant values for `satellite` are "Landsat5", "Landsat7" and "Landsat8" for now.
 	
 3.	Create the composite - Run `BestAvailablePixel.R` (recommended with RStudio)
 	Adjust values for the path to script `functions.R`, year and the path to preprocessed imagery (lines 20, 28, 29).
