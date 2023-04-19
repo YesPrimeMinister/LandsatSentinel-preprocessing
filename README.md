@@ -8,17 +8,17 @@ Created by Jakub Dvořák and Markéta Potůčková at the dept. of Applied Geoi
 
 ## Installation
 
-The Python scripts reqire Python 3 (tested with Python 3.9) with external libraries which can be installed by running:
+The Python scripts reqire Python 3 (tested with Python 3.9) with rasterio and geopandas, which can be installed by running:
 
 
 ```sh
-pip install rasterio, geopandas, numpy, matplotlib
+pip install rasterio, geopandas
 ```
 
 or
 
 ```sh
-conda install rasterio, geopandas, numpy, matplotlib
+conda install rasterio, geopandas
 ```
 
 The R script should install the required libraries by itself. It requires "raster", "rgdal" and "lubridate".
@@ -28,7 +28,7 @@ Tested in RStudio 2022.02.1 using R version 4.1.3.
 
 There are 4 steps to running this procedure successfuly:
 
-1.	Download the imagery - The script uses Level-2 (atmospherically corrected) imagery downloaded from USGS EarthExplorer (Landsat - Collection 2) and Copernicus Open Access Hub (Sentinel-2). We suggest downloading all relevant imagery with cloud cover below 75 %.
+1.	Download the imagery - Save all imagery for a year into one folder. The script uses Level-2 (atmospherically corrected) imagery downloaded from USGS EarthExplorer (Landsat - Collection 2) and Copernicus Open Access Hub (Sentinel-2). We suggest downloading all relevant imagery with cloud cover below 75 %.
 
 2. 	Preprocess the imagery - Run `imagery_preprocessing.py`.
 	In the command line, run as:
@@ -52,4 +52,18 @@ There are 4 steps to running this procedure successfuly:
 	If running from an editor, set values for variables `in_path` and `satellite`.
 	
 	Relevant values for `satellite` are the same as for `imagery_preprocessing.py` (step 2).
-	
+
+## Results
+
+The scripts produce two result rasters - _out_composite_with_indices.tif_ and _out_metadata_cdist-doy-score.tif_ 
+
+*	_out_composite_with_indices.tif_ for landsat has 13 bands:
+
+			L5/7 -	B1, B2, B3, B4, B5, B7, TCB, TCG, TCW, NDVI, NDII, NBR2, SRTM
+
+			L8	 -	B2, B3, B4, B5, B6, B7, TCB, TCG, TCW, NDVI, NDII, NBR2, SRTM
+
+*	_out_metadata_cdist-doy-score.tif_ has three bands:
+			cdist - Cloud distance in metres
+			doy - day of year from which the pixel is selected
+			score - overall score for each pixel
